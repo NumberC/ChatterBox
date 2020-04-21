@@ -1,0 +1,55 @@
+<div id="loginDiv">
+
+<div id="googleSignIn"></div>
+<hr id="divisionLine">
+
+{{#if isLogin}}
+<form action="/login" method="POST">
+{{else}}
+<form action="/register" method="POST">
+{{/if}}
+
+    <label for="username">Username</label><br>
+    <input name="username" type="email" placeholder="Email" required></input><br><br>
+    <label for="password">Password</label><br>
+    <input name="password" type="password" placeholder="Password" required><br>
+
+{{#if isLogin}}
+    <button class="btn btn-primary">Login</button><br>
+    <a href="/register">Sign Up</a>
+{{else}}
+    <br><label for="passwordConfirm">Confirm Password</label>
+    <input name="passwordConfirm" type="password" placeholder="Confirm Password" required>
+    <button class="btn btn-primary">Sign Up</button><br>
+    <a href="/login">Login</a>
+{{/if}}
+</form>
+</div>
+
+<script>
+    function onSuccess(googleUser) {
+        console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
+    }
+    function onFailure(error) {
+        console.log(error);
+    }
+    function renderButton() {
+        gapi.signin2.render('googleSignIn', {
+        'scope': 'profile email',
+        'width':  document.getElementsByTagName("input")[0].offsetWidth,
+        'height': document.getElementsByTagName("input")[0].offsetHeight,
+        'longtitle': true,
+        'theme': 'light',
+        'onsuccess': onSuccess,
+        'onfailure': onFailure
+        });
+    }
+    window.onresize = function(event) {
+        var googleButton = document.getElementById("googleSignIn");
+        var mainGoogleDiv = googleButton.getElementsByTagName("div")[0];
+        mainGoogleDiv.style.width = document.getElementsByTagName("input")[0].offsetWidth + "px";
+        mainGoogleDiv.style.height = document.getElementsByTagName("input")[0].offsetHeight + "px";
+    };
+</script>
+
+<script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>

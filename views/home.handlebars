@@ -1,0 +1,84 @@
+{{#if loggedIn}}
+    <div style="display: flex;">
+        <div id="sidebar">
+            <button>Create New Group</button>
+            <div id="people">
+                <ul>
+                    <li onclick="makeULActive(this);"><div class="groupProfile"></div>Jaden</li>
+                    <li onclick="makeULActive(this);"><div class="groupProfile"></div>Jaden, Sajid</li>
+                </ul>
+            </div>
+        </div>
+        <div id="main-chat-window">
+            {{!-- <div class="profile"></div> --}}
+            <div id="chat-window">
+                {{!-- <div class="message">
+                    <h6>Sajid</h6>
+                    <div class="message-content">
+                        <div class="profile pro-bl"></div>
+                        <p class="msgTxt">Jay, you there?</p>
+                    </div>
+                </div>
+                <div class="message">
+                    <h6>Jaden Torres</h6>
+                    <div class="message-content">
+                        <div class="profile pro-bl"></div>
+                        <p class="msgTxt">no idot</p>
+                    </div>
+                </div>
+                <div class="message selfMsg">
+                    <h6>Fadi Farag</h6>
+                    <div class="message-content">
+                        <p class="msgTxt">This is Fadi</p>
+                        <div class="profile pro-bl"></div>
+                    </div>
+                </div>
+                <div class="message">
+                    <h6>Jaden Torres</h6>
+                    <div class="message-content">
+                        <div class="profile pro-bl"></div>
+                        <p class="msgTxt">no idot</p>
+                    </div>
+                </div> --}}
+            </div>
+            <form id="sendMsgForm">
+                <input type="text" name="msg">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+{{else}}
+    <div class="featurePair">
+        <div class="profile-feature pro-bl-feature"></div>
+        <div class="homeFeature">
+            <p>Feature #1</p>
+        </div>
+    </div>
+    <div id="special" class="featurePair">
+        <div class="profile-feature pro-red-feature oppositeLanding"></div>
+        <div class="homeFeature">
+            <p>Feature #2</p>
+        </div>
+    </div>
+    <div class="featurePair">
+        <div class="profile-feature pro-bl-feature"></div>
+        <div class="homeFeature">
+            <p>Feature #3</p>
+        </div>
+    </div>
+
+    <footer class="shadow-sm p-3 mb-5 bg-white">
+    </footer>
+{{/if}}
+
+<script>
+    function makeULActive(element){
+        if(!element.classList.contains("active")){
+            var peopleList = document.getElementById("people").getElementsByTagName("li");
+            for(var i = 0; i < peopleList.length; i++){
+                peopleList[i].classList.remove("active");
+            }
+            element.classList.add("active");
+        }
+    }
+</script>

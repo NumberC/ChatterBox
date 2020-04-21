@@ -1,0 +1,138 @@
+#sidebar{
+    background-color: #F2F2F2;
+    width: 30%;
+    height: 90vh;
+}
+
+#sidebar button{
+    background-color: var(--bubbleColor);
+    position: relative;
+    left: 10%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 100px;
+    border: 0;
+    height: fit-content;
+    width: 80%;
+    font-size: 20px;
+    color: white;
+}
+
+#people{
+    font-size: 30px;
+    margin-top: 30px;
+}
+
+#people ul{
+    padding: 0;
+}
+
+#people > ul > li{
+    display: flex;
+}
+
+#people > ul > .active, #people > ul > li:hover{
+    background-color: #C8C8C8;
+}
+
+.groupProfile{
+    width: 50px;
+    height: 50px;
+    border-radius: 100px;
+    background-color: #FF6DC5;
+    margin: 10px;
+    margin-top: 0px;
+}
+
+#main-chat-window{
+    width: 70%;
+    height: 90vh;
+}
+
+#chat-window{
+    width: 100%;
+    height: calc(100% - 5vh);
+    overflow: scroll;
+    overflow-y: hidden; /* Hide vertical scrollbar */
+    overflow-x: hidden; /* Hide horizontal scrollbar */
+}
+
+#sendMsgForm{
+    width: 100%;
+    height: 5vh;
+    display: flex;
+}
+
+#sendMsgForm input, #sendMsgForm button{
+    display: block;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    margin: 0;
+}
+
+#sendMsgForm input{
+    width: 80%;
+    padding-left: 20px;
+    background-color: #D4D4D4;
+}
+
+#sendMsgForm button{
+    width: 20%;
+    background-color: var(--bubbleColor);
+}
+
+.profile{
+    border-radius: 100%;
+    width: 30px;
+    height: 30px;
+    background-color: red;
+}
+
+.message{
+    margin-top: 10px;
+    margin-bottom: 2px;
+    padding-left: 5px;
+}
+
+.message h6{
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.message-content{
+    display: flex;
+}
+
+.msgTxt{
+    margin: 0;
+    background-color: var(--bubbleColor);
+    width: fit-content;
+    /* max-width: 40%; */
+    height: fit-content;
+    border-radius: 10px;
+    padding: 5px;
+    margin-left: 5px;
+
+    color: white;
+}
+
+.selfMsg{
+    overflow: auto;
+}
+
+.selfMsg > .message-content{
+    float: right;
+}
+
+.selfMsg > .message-content > .profile{
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.selfMsg h6{
+    margin-right: 5px;
+    text-align: right;
+}
+
+#sendMsgForm input:focus, #sendMsgForm button:focus{outline: 0;}

@@ -1,0 +1,45 @@
+.homeFeature{
+    background-color: var(--bubbleColor);
+    width: 30vw;
+    height: 20vh;
+    border-radius: 15px;
+}
+
+.homeFeature p{
+    margin-top: 15px;
+    margin-left: 25px;
+}
+
+.profile-feature{
+    border-radius: 100vw;
+    width: 70px;
+    height: 70px;
+}
+
+.pro-bl-feature{
+    background-color: var(--mainChat);
+}
+
+.pro-red-feature{
+    background-color: var(--red);
+}
+
+.featurePair{
+    display: flex;
+    padding: 5px;
+    width: fit-content;
+}
+
+.featurePair > div{
+    margin: 5px;
+    color: white;
+}
+
+.featurePair:nth-of-type(2n){
+    position: relative;
+    left: calc(70vw - 100px);
+}
+
+.oppositeLanding{
+    order: 2;
+}

@@ -1,0 +1,43 @@
+@import "stylesheets/landingFeatures.css";
+@import "stylesheets/loginPage.css";
+@import "stylesheets/activeHome.css";
+
+:root{
+    --activeMain: #007bff;
+    --mainChat: #6DB5FF;
+    --red: #FF6D6D;
+    --bubbleColor: #7DD472;
+    --forecolor: #F2F2F2;
+}
+
+#mainSignUpBtn{
+    position: relative;
+    border-radius: 100vw;
+    width: 30vw;
+    left: 35vw;
+}
+
+header{
+    display: flex;
+    color: white;
+    background-color: var(--activeMain);
+    height: 10vh;
+}
+
+#userDropdown > .btn-secondary {
+    background:transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+#headerLogin:hover{
+    cursor: pointer;
+}
+
+#title{
+    flex: 1;
+}
+
+#title:hover{
+    cursor: pointer;
+}
