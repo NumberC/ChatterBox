@@ -8,7 +8,7 @@ var session = require('express-session')
 const ehb  = require("express-handlebars");
 var bodyParser = require('body-parser');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const passport = require("passport");
 
 //Database Configuration
