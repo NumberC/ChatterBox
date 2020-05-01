@@ -43,6 +43,7 @@ const MessageSchema = new Schema({
     },
     Group: [{type : ObjectId, ref: 'userIDs'}],
     Messages: [{
+        Sender: {type : ObjectId},
         Content: String,
         Date: Date
     }]
@@ -57,38 +58,42 @@ UserSchema.methods.validPassword = function(password) {
     return bcrypt.compareSync(password, this.password);
 };
 
-async function trying(members, users, subArray){
-    members.forEach((memberID) => {
-        users.findById(memberID, (err, req) => {
-            console.log(req.name);
-            subArray.push(req.name);
-            console.log(subArray);
-        });
-    });
-}
-
 UserSchema.methods.getGroups = async function(users, messages) {
     var result = [];
-    messages.find({Group: this._id}, (err, group) => {
-        for(var i = 0; i < group.length; i++){
-            var members = group[i].Group;
-            var subArray = [];
 
-            members.forEach((memberID) => {
-                users.findById(memberID, (err, req) => {
-                    console.log(req.name);
-                    subArray.push(req.name);
-                    console.log(subArray);
+    await messages.find({Group: this._id}).map(async Groups => {
+        var subArray = [];
+
+        for(const Group of Groups){
+            for(const memberID of Group.Group){
+                await users.findById(memberID).map(async req => {
+                    var name = "User Deleted";
+                    if(req) name = req.name;
+                    subArray.push(name);
                 });
-            });
-
-            //After function finishes:
-            console.log(subArray);
-            result.push(subArray);
+            }
+            result.push({ID: Group._id, Members: subArray});
+            console.log("SB: " + subArray);
             subArray = [];
         }
+        return result;
     });
+    console.log("----------7----------");
+    console.log(result);
+    return result;
 };
+
+MessageSchema.statics.sendMsg = function(id, senderID, msg){
+    this.findById(id, (err, res) => {
+        if(!res){
+            console.log("Group Does Not Exist");
+        } else{
+            var currentDate = new Date();
+            res.Messages.push({Sender: senderID, Content: msg, Date: currentDate.getTime()});
+            res.save();
+        }
+    });
+}
 
 mongoose.pluralize(false);
 

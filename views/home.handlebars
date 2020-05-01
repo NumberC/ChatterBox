@@ -1,16 +1,44 @@
 {{#if loggedIn}}
     <div style="display: flex;">
         <div id="sidebar">
-            <button>Create New Group</button>
+
+            <button data-toggle="modal" data-target="#groupModal">Create New Group</button>
+            <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form id="addToGroupForm" style="display: inline-flex;" onsubmit="return getName(event);">
+                            <input name="searchQuery" type="email" class="form-control" placeholder="Search By Email: ">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
+                        <div id="groupResults">
+                            <ul class="list-group">
+                                <li class="list-group-item">{{loggedIn.name}}</li>
+                            </ul>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="createGroup();">Create Group</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="people">
                 <ul>
-                    <li onclick="makeULActive(this);"><div class="groupProfile"></div>Jaden</li>
-                    <li onclick="makeULActive(this);"><div class="groupProfile"></div>Jaden, Sajid</li>
+                    {{#each group}}
+                        <li group-data={{this.ID}} onclick="makeULActive(this);" {{#if @first}}class="active"{{/if}}><div class="groupProfile"></div>
+                            {{#each this.Members}}
+                                {{this}}
+                                {{#unless @last}}
+                                ,
+                                {{/unless}}
+                            {{/each}}
+                        </li>
+                    {{/each}}
                 </ul>
             </div>
         </div>
         <div id="main-chat-window">
-            {{!-- <div class="profile"></div> --}}
             <div id="chat-window">
                 {{!-- <div class="message">
                     <h6>Sajid</h6>
@@ -71,14 +99,154 @@
     </footer>
 {{/if}}
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
-    function makeULActive(element){
+    var ioVar = null;
+    setupIO();
+
+    $('#sendMsgForm').submit(false);
+    $("#sendMsgForm").on("submit", () => {        
+        if(document.getElementsByClassName("active").length > 0){
+            if($("#sendMsgForm input[name='msg']").val().length > 0){
+                var sendMsgDict = {
+                    ID: document.getElementsByClassName("active")[0].getAttribute("group-data"),
+                    Msg: $("#sendMsgForm input[name='msg']").val()
+                };
+                console.log(sendMsgDict);
+
+                $("#chat-window").append(
+                    `<div class='message selfMsg'>
+                        <h6>` + "{{loggedIn.name}}" + `</h6>
+                        <div class='message-content'>
+                            <p class='msgTxt'>` + $("#sendMsgForm input[name='msg']").val() + `</p>
+                            <div class='profile pro-bl'></div>
+                        </div>
+                    </div>`
+                );
+                ioVar.emit('message', {ID: document.getElementsByClassName("active")[0].getAttribute("group-data"), SenderID: "{{loggedIn._id}}",
+                                        name: "{{loggedIn.name}}", content: sendMsgDict.Msg});
+            }
+        } else{
+            alert("Choose/Create A Group!");
+        }
+        
+        $("#sendMsgForm input[name='msg']").val("");
+        scrollToBottom();
+    });
+    fetchMsgs().then(() => {
+        scrollToBottom();
+    });
+
+    async function makeULActive(element){
         if(!element.classList.contains("active")){
             var peopleList = document.getElementById("people").getElementsByTagName("li");
             for(var i = 0; i < peopleList.length; i++){
                 peopleList[i].classList.remove("active");
             }
             element.classList.add("active");
+            destroyOldIO();
+            await fetchMsgs();
         }
+    }
+
+    function destroyOldIO(){
+        ioVar.removeListener("message");
+        setupIO();
+    }
+
+    function scrollToBottom(){
+        console.log("STARTING HER");
+        $("#chat-window").animate({ scrollTop: $('#chat-window').prop("scrollHeight")}, 1000);
+    }
+
+    function baseFunction(isSelf, data, msg){
+        var HTMLClass = "message";
+        var htmlContents = `<div class="profile pro-bl"></div>`;
+        if(isSelf){
+            HTMLClass = HTMLClass + " selfMsg";
+            htmlContents = `<p class="msgTxt">` + msg.Content + `</p>` + htmlContents;
+        } else{
+            htmlContents += `<p class="msgTxt">` + msg.Content + `</p>`;
+        }
+        $("#chat-window").append(
+        `
+        <div class="` + HTMLClass + `">
+            <h6>` + data.name + `</h6>
+            <div class="message-content">`
+                + htmlContents +
+            `</div>
+        </div>
+        `);
+    }
+
+    async function fetchMsgs(){
+        if(document.getElementsByClassName("active").length > 0){
+            document.getElementById("chat-window").innerHTML = "";
+            await $.get(`/messages/${document.getElementsByClassName("active")[0].getAttribute("group-data")}`, async (data, status) => {
+                console.log(data);
+                for(var i = 0; i < data.length; i++){
+                    msg = data[i];
+                    
+                    try{
+                        await $.get("/searchById/" + msg.Sender, async (data, status) => {
+                            var localID = "{{loggedIn._id}}";
+                            baseFunction((data._id === localID), data, msg);
+                        });
+                    } catch(e){baseFunction(false, {name: "Deleted User"}, msg);}
+                }
+            });
+        }
+    }
+
+    function setupIO(){
+        if(document.getElementsByClassName("active").length > 0){
+            var currentName = "/" + document.getElementsByClassName("active")[0].getAttribute("group-data");
+            ioVar = io(currentName);
+            ioVar.on("message", function(msg){
+                console.log("HER guys");
+                $("#chat-window").append(`
+                <div class="message">
+                    <h6>` + msg.name + `</h6>
+                    <div class="message-content">
+                        <div class="profile pro-bl"></div>
+                        <p class="msgTxt">` + msg.content + `</p>
+                    </div>
+                </div>
+                `);
+                scrollToBottom();
+            });
+        }
+    }
+    
+    var members = [];
+    function getName(e){
+        e.preventDefault();
+        var form = document.getElementById("addToGroupForm");
+        var groupResults = document.getElementById("groupResults");
+        var email = form["searchQuery"].value;
+        $.ajax({
+            url: `/search/${email}`,
+            success: function(result){
+                if(!members.includes(result.id)){
+                    groupResults.getElementsByTagName("ul")[0].innerHTML = groupResults.getElementsByTagName("ul")[0].innerHTML + "<li class=\"list-group-item\">" + result.name + "</li>";
+                    members.push(result.id);
+                }  
+            },
+            error: function(err){
+                alert("No User Exists With That");
+            }
+        });
+        form["searchQuery"].value = "";
+        return false;
+    }
+    
+    function createGroup(){
+        console.log(members);
+        $('#groupModal').modal('hide');
+        $.post("/createGroup", {memberIDs: members}, function(data, status){
+            window.location.reload();
+        });
+        window.location.reload();
+        members = [];
     }
 </script>

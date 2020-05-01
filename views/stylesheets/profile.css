@@ -1,0 +1,53 @@
+.lgProfile{
+    width: min(20vh, 20vw);
+    height: min(20vh, 20vw);
+}
+
+#profileDiv{
+    margin-top: var(--stdMargin);
+    margin-left: var(--stdMargin);
+}
+
+#profile-container{
+    display: flex;
+}
+
+#profile-info{
+    margin-left: 20px;
+}
+
+#profile-info h1{
+    font-size: 8em;
+    margin-bottom: 0;
+    max-width: calc(100vw - min(20vh, 20vw));
+}
+
+#profile-info h6{
+    font-size: 1em;
+}
+
+.stdBtn{
+    width: fit-content;
+    background-color: var(--bubbleColor);
+    outline: 0;
+    border: 0;
+    border-radius: 5px;
+}
+
+.whiteTxt{
+    color: white;
+}
+
+.custom-btn-primary{
+    font-size: 1rem;
+    padding: .375rem .75rem;
+    text-align: center;
+    vertical-align: middle;
+    background-color: var(--bubbleColor);
+    color: white;
+}
+
+
+#editProfileDiv{
+    display: none;
+}

@@ -1,19 +1,118 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-</head>
-<body>
-    <h1>{{name}}</h1> 
-    <h3>{{quote}}</h3>
-    <p>{{description}}</p>
-    <input type="text" id="query">
-    <button id="submit" onclick="search()">Search</button>
+{{#if User}}
+    <div id="profileDiv">
+        <div id="profile-container">
+        <div class="profile lgProfile"></div>
+            <div id="profile-info">
+                <h1>{{User.name}}</h1>
+                <p></p>
+                <h6>{{User.email}}</h6>
+            </div>
+        </div>
+        <div style="margin-top: 30px;">
+            <div id="editProfileDiv">
+                <button data-toggle="modal" data-target="#groupModal" class="btn btn-danger">Delete Account</button>
+                <div class="modal fade" id="groupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div style="display: none;" id="confirmPasswordAlert" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Incorrrect Password!</strong>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+
+                            <p>Type your password to delete your account</p>
+                            <input type="password" placeholder="Password">
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-danger" onclick="deleteAccount();">Delete Account</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="custom-btn-primary btn" onclick="cancelEdit();">Cancel</button>
+                <button class="custom-btn-primary btn" onclick="saveEdit();">Save Changes</button>
+            </div>
+            <button id="editProfileBtn" class="custom-btn-primary btn" onclick="editProfile();">Edit Profile</button>
+        </div>
+    </div>
 
     <script>
-        function search(){
-            window.location = "/users/" + document.getElementById("query").value;
+        var username = document.getElementById("profile-info").getElementsByTagName("h1")[0];
+        var editDiv = document.getElementById("editProfileDiv");
+        var editBtn = document.getElementById("editProfileBtn");
+        var usernameLimit = 30;
+        $("#profile-info p").text(username.innerHTML.length + "/" + usernameLimit);
+
+        //Handle Max Character Limit
+        $('body').on('DOMSubtreeModified', '#profile-info h1', function(){
+            if(username.innerHTML.length >= 30){
+                var currentString = $('#profile-info h1').text();
+                var newString = "";
+                for(var i = 0; i < usernameLimit-1; i++){
+                    console.log(currentString[i]);
+                    newString = newString + currentString[i];
+                }
+                $('#profile-info h1').text(newString);
+            }
+            $("#profile-info p").text((username.innerHTML.length) + "/" + usernameLimit);
+        });
+
+        $("#profile-info h1").keypress(function(event) {
+            if(username.innerHTML.length >= usernameLimit){
+                event.preventDefault();
+                console.log("MAX Username");
+            }
+            if (event.key == "Enter") {
+                event.preventDefault();
+            }
+        });
+
+        function deleteAccount(){
+            var passwordIn = editDiv.getElementsByTagName("input")[0];
+            $.ajax({
+                type: "POST",
+                url: "/deleteProfile",
+                data: {UID: "{{User._id}}", UserPassword: passwordIn.value},
+                success: (data) => {
+                    window.location.href = "/";
+                },
+                error: (data) => {
+                    document.getElementById('confirmPasswordAlert').style.display = "block";
+                }
+            });
+        }
+
+        function cancelEdit(){
+            toggleEdit(false);
+        }
+
+        function saveEdit(){
+            var newUserName = username.innerHTML;
+            console.log(newUserName);
+            toggleEdit(false);
+            $.post("/updateProfile", {NewUsername: newUserName}, (data, status) => {
+                window.location.href = '/';
+            });
+        }
+
+        function editProfile(){
+            toggleEdit(true);
+        }
+
+        function toggleEdit(toggleOn){
+            username.contentEditable = toggleOn;
+            if(toggleOn){
+                username.focus();
+                editBtn.style.display = "none";
+                editDiv.style.display = "block";
+            } else{
+                editBtn.style.display = "block";
+                editDiv.style.display = "none";
+            }
         }
     </script>
-</body>
-</html>
+{{else}}
+    <h1>You Must Be Signed In To View Your Profile</h1>
+{{/if}}

@@ -29,13 +29,15 @@ app.set('view engine', 'handlebars');
 
 //Setup Database
 var schemas = require(path.resolve( __dirname, "./schema.js"));
-
-//Routes
-var routes = require(path.resolve( __dirname, "./routes/route.js"))(app, schemas, mongo);
  
 //Socket.io
 const server = http.createServer(app);
-var ioHandler = require(path.resolve( __dirname, "./io.js"))(server);
+var ioHandler = require(path.resolve( __dirname, "./io.js"));
+ioHandler(server, schemas);
+
+//Routes
+var routes = require(path.resolve( __dirname, "./routes/route.js"))(app, schemas, mongo, ioHandler);
+
 server.listen(port);
 // console.log(process.env.MONGO_PASSWORD);
 // console.log(process.env.MONGO_PRODUCTION_URL);

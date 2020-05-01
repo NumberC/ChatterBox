@@ -1,6 +1,7 @@
 @import "stylesheets/landingFeatures.css";
 @import "stylesheets/loginPage.css";
 @import "stylesheets/activeHome.css";
+@import "stylesheets/profile.css";
 
 :root{
     --activeMain: #007bff;
@@ -8,6 +9,7 @@
     --red: #FF6D6D;
     --bubbleColor: #7DD472;
     --forecolor: #F2F2F2;
+    --stdMargin: 30px;
 }
 
 #mainSignUpBtn{

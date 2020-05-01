@@ -1,4 +1,4 @@
-module.exports = (app, schemas, mongo) => {
+module.exports = (app, schemas, mongo, ioHandler) => {
     const friends = schemas.FriendModel;
     const users = schemas.UserModel;
     const messages = schemas.MessageModel;
@@ -8,78 +8,29 @@ module.exports = (app, schemas, mongo) => {
     const login = require(path.resolve( __dirname, "../login.js"));
     login(users, passport);
 
+    var errorCodes = {
+                        400: {status: 400, error: "No User With That ID"},
+                        401: {status: 401, error: "You Must Be Signed In"}
+                    };
+
     app.get("/", (req, res) => {
-        res.render("home", {loggedIn: req.user});
-        if(req.user){
-            console.log(req.user);
-            console.log("WOAHO");
-        }
+        if(!req.user) return res.render("home", {loggedIn: req.user});
+
+        users.findById(req.user._id, async (err, result) => {
+            var groups = await result.getGroups(users, messages);
+            res.render("home", {loggedIn: req.user, group: groups})
+        });
     });
 
-    app.get("/login", (req, res) => {
-        if(!req.user){
-            res.render("login", {isLogin: true, loggedIn: req.user});
-        } else{
-            res.redirect("/");
-        }
+    app.get("/profile", (req, res) => {
+        if(req.user) return res.render("profile", {User: req.user});
+        return res.redirect("/");
     });
 
     app.get("/register", (req, res) => {
-        if(!req.user){
-            res.render("login", {isLogin: false, loggedIn: req.user});
-        } else{
-            res.redirect("/");
-        }
+        if(!req.user) return res.render("login", {isLogin: false, loggedIn: req.user});
+        return res.redirect("/");
     });
-
-    app.get("/logout", (req, res) => {
-        if(req.session){
-            req.session.destroy((err) => {
-                res.redirect("/");
-            });
-        } else {
-            res.redirect("/login");
-        }
-    });
-
-    app.get("/test", async (req, res) => {
-        //return [["test"], ["test", "fadi"]]
-        var result = [];
-
-        users.findById(mongo.ObjectID("5e9c684f3a2c433d7c54be70"), async (err, res) => {
-            await res.getGroups(users, messages);
-        });
-
-        res.redirect("/");
-    });
-
-    app.post("/sendMsg", (req, res) => {
-        //5e9c684f3a2c433d7c54be70 - test
-        //5e9cab798350690c0c29f560 - me
-
-        var id = req.body.ID;
-        var idStrArray = req.body.ID.split(", ");
-        var idArray = [];
-        idStrArray.forEach(element => {
-            console.log(element.toString());
-            idArray.push(mongo.ObjectID(element.toString()));
-        });
-        var msg = req.body.msg;
-
-        // messages.findOne({Group: idArray}, (err, res) => {
-        //     var currentDate = new Date();
-        //     if(!res){
-        //         var msgObj = {Group: idArray, Messages: [{Content: msg, Date: currentDate.getTime()}]};
-        //         messages.insertMany(msgObj);
-        //     } else{
-        //         res.Messages.push({Content: msg, Date: currentDate.getTime()});
-        //         res.save();
-        //     }
-        // })
-        res.redirect("/");
-    });
-
-    app.post("/login",  passport.authenticate('local', { successRedirect: '/',failureRedirect: '/error', failureFlash: false }));
 
     app.post("/register", (req, res) => {
         var email = req.body.username;
@@ -94,60 +45,93 @@ module.exports = (app, schemas, mongo) => {
         res.redirect("/login");
     });
 
-    app.get("/error", (req, res) => {
-        res.render("error", {"code": 200, "description": "Not Valid ID"})
+    app.get("/login", (req, res) => {
+        if(!req.user) return res.render("login", {isLogin: true, loggedIn: req.user});
+        return res.redirect("/");
     });
-    
-    app.post("/error", (req, res) => {
-        console.log(req.body);
-        var name = req.body.name;
-        var quote = req.body.quote;
-        var description = req.body.description;
-    
-        console.log(name);
-        console.log(quote);
-        console.log(description);
-    
-        var newUser = {"name": name, "quote": quote, "description": description};
-        friends.insertMany([newUser]);
+
+    app.post("/login",  passport.authenticate('local', { successRedirect: '/',failureRedirect: '/login', failureFlash: false }));
+
+    app.post("/deleteProfile", (req, res) => {
+        var UID = req.body.UID;
+
+        if(!req.user) return res.status(401).send(errorCodes[401]);
+        if(req.user._id !== UID) return;
+
+        var userPassword = req.body.UserPassword;
+        users.findById(UID, (err, result) => {
+            if(!result) return res.status(400).send(errorCodes[400]);
+            if(!result.validPassword(userPassword)) return res.status(401).send(errorCodes[401]);
+
+            result.remove(() => {
+                req.session.destroy();
+                res.redirect("/");
+            });
+        });
+    });
+
+    app.get("/logout", (req, res) => {
+        if(!req.session) return res.redirect("/login");
+        req.session.destroy((err) => {
+            return res.redirect("/");
+        });
+    });
+
+    app.post("/updateProfile", (req, res) => {
+        if(!req.user) return res.status(401).send(errorCodes[401]);
+
+        var newUsername = req.body.NewUsername;
+        users.findById(req.user._id, (err, result) => {
+            result.name = newUsername;
+            result.save();
+        });
         res.redirect("/");
     });
-    
-    app.get("/search/:name", (req, res) => {
-        var name = req.params.name;
-        console.log(name);
-    
-        friends.findOne({name: name}, (err, result) => {
-            if(err || !result){
-                res.redirect("/error")
-            } else {
-                var data = {"name": result.name, "quote": result.quote, "description": result.description};
-                res.render("profile", data);
-                //5e99bfa892071e20ccb5cb89
-                //5e99bfa892071e20ccb5cb8a
-            }  
-        })
+
+    app.get("/search/:email", (req, res) => {
+        var email = req.params.email;
+        if(req.user && email == req.user.email) return res.status(400).send(errorCodes[400]);
+
+        users.findOne({email: email}, (err, result) => {
+            if(err || !result) return res.status(400).send(errorCodes[400]);
+            return res.json({name: result.name, id: result._id});            
+        });
     });
-    
-    app.get("/users/:id", (req, res) => {
-        var id = req.params.id;
-        console.log(id);
-    
-        friends.findById(mongo.ObjectID(id), (err, result) => {
-            if(err || !result){
-                res.redirect("/error")
-            } else{
-                console.log(result);
-                var data = {"name": result.name, "quote": result.quote, "description": result.description};
-                res.render("profile", data);
-                //5e99bfa892071e20ccb5cb89
-                //5e99bfa892071e20ccb5cb8a
+
+    app.post("/createGroup", (req, res) => {
+        var IDs = req.body.memberIDs || [];
+        if(!req.user) return res.status(401).send(errorCodes[401]);
+
+        IDs.push(req.user._id);
+
+        messages.find({Group: { "$size" : IDs.length, "$all": IDs }}, (err, result) => {
+            if(err || !result || result.length == 0){
+                groupUID = mongo.ObjectID();
+                var newMsg = new messages({
+                    _id: groupUID,
+                    Group: IDs, 
+                    Messages: []
+                });
+                messages.insertMany(newMsg);
+                ioHandler.addNSP(groupUID);
             }
+        });
+    });
+
+    app.get("/messages/:groupUID", (req, res) => {
+        var groupUID = req.params.groupUID;
+        messages.findById(mongo.ObjectID(groupUID), (err, result) => {
+            if(!result) return res.status(400).send(errorCodes[400]);
+            return res.json(result.Messages);
         })
     });
 
-    app.get("/message", (req, res) => {
-        res.render("message");
+    app.get("/searchByID/:UID", (req, res) => {
+        var id = req.params.UID;
+        users.findById(mongo.ObjectID(id), (err, result) => {
+            if(!result) return res.status(400).send(errorCodes[400]);
+            return res.json(result);
+        });
     });
 }
  
