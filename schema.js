@@ -4,31 +4,17 @@ const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 
 const uri = process.env.MONGO_PRODUCTION_URL;
-const friendsUri = process.env.MONGO_DEVELOPMENT_URL;
 
 const productionConn = mongoose.createConnection(uri, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 });
-const friendsConn = mongoose.createConnection(friendsUri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
-
-const Profile = new Schema({
-    _id: {
-        type: ObjectId,
-        ref: "ids"
-    },
-    name: String,
-    quote: String,
-    description: String
-}, { versionKey: false });
 
 const UserSchema = new Schema({
     _id: {
         type: ObjectId,
-        ref: "ids"
+        ref: "ids",
+        auto: true
     },
     name: String,
     email: String,
@@ -55,8 +41,14 @@ UserSchema.statics.generateHash = function(password) {
 
 // checking if password is valid
 UserSchema.methods.validPassword = function(password) {
+    if(!this.password) return false;
     return bcrypt.compareSync(password, this.password);
 };
+
+UserSchema.methods.isSocial = function(){
+    if(this.OAuth != null) return true;
+    return false;
+}
 
 UserSchema.methods.getGroups = async function(users, messages) {
     var result = [];
@@ -97,6 +89,5 @@ MessageSchema.statics.sendMsg = function(id, senderID, msg){
 
 mongoose.pluralize(false);
 
-module.exports.FriendModel = friendsConn.model("friends", Profile);
 module.exports.UserModel = productionConn.model("users", UserSchema)
 module.exports.MessageModel = productionConn.model("messages", MessageSchema);

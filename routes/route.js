@@ -1,5 +1,4 @@
 module.exports = (app, schemas, mongo, ioHandler) => {
-    const friends = schemas.FriendModel;
     const users = schemas.UserModel;
     const messages = schemas.MessageModel;
 
@@ -8,10 +7,11 @@ module.exports = (app, schemas, mongo, ioHandler) => {
     const login = require(path.resolve( __dirname, "../login.js"));
     login(users, passport);
 
-    var errorCodes = {
-                        400: {status: 400, error: "No User With That ID"},
-                        401: {status: 401, error: "You Must Be Signed In"}
-                    };
+    var errorCodes = 
+    {
+        400: {status: 400, error: "No User With That ID"},
+        401: {status: 401, error: "You Must Be Signed In"}
+    };
 
     app.get("/", (req, res) => {
         if(!req.user) return res.render("home", {loggedIn: req.user});
@@ -21,6 +21,9 @@ module.exports = (app, schemas, mongo, ioHandler) => {
             res.render("home", {loggedIn: req.user, group: groups})
         });
     });
+
+    app.get('/auth/google', passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'] }));
+    app.get('/auth/google/callback', passport.authenticate('google', { successRedirect: '/',failureRedirect: '/login', failureFlash: false }));
 
     app.get("/profile", (req, res) => {
         if(req.user) return res.render("profile", {User: req.user});

@@ -1,7 +1,6 @@
 const dotenv = require('dotenv');
 dotenv.config();
 
-const fs = require("fs");
 const http = require("http");
 const express = require("express");
 var session = require('express-session')
@@ -39,5 +38,3 @@ ioHandler(server, schemas);
 var routes = require(path.resolve( __dirname, "./routes/route.js"))(app, schemas, mongo, ioHandler);
 
 server.listen(port);
-// console.log(process.env.MONGO_PASSWORD);
-// console.log(process.env.MONGO_PRODUCTION_URL);
